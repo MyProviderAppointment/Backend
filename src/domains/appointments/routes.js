@@ -40,9 +40,10 @@ router.post('/makeAnAppointment', async (req, res) => {
     try {
         let { slot_date, slot_start, email, userId, name, phone } = req.body;
         
-        if (!slot_date || !slot_start || !email )
-            throw Error("Empty fields are not allowed");
-        
+        if (!slot_date || !slot_start ) {
+            if (!email && (!name || !phone))
+                throw Error("Empty fields are not allowed");
+        }
         else if (new Date(slot_date) < Date.now()) 
             throw Error("Invalid date");
         
@@ -53,7 +54,7 @@ router.post('/makeAnAppointment', async (req, res) => {
                 email, 
                 userId,
                 name, 
-                // phone,
+                phone,
             });
 
             res.json({
@@ -74,19 +75,15 @@ router.post('/makeAnAppointment', async (req, res) => {
 router.post('/cancelAppointment', async (req, res) => {
     try {
         let {slot_date, slot_start} = req.body;
-        
         if (!slot_date || !slot_start )
             throw Error("Empty fields are not allowed");
-        
         else if (new Date(slot_date) < Date.now()) 
             throw Error("Invalid date");
-        
         else {
             const AppointmentsRecords = await cancelAppointment({
                 slot_date, 
                 slot_start,   
             });
-
             res.json({
                 status: "SUCCESS",
                 message: `Successfully cancel appointment.`,
@@ -100,11 +97,10 @@ router.post('/cancelAppointment', async (req, res) => {
     }
 })
 
-
+// Get Appointments
 router.get('/getAppointments', async (req, res) => {
     try {
-        let {slot_date} = req.body;
-        
+        let {slot_date} = req.body;      
         if (!slot_date)
             throw Error("Empty fields are not allowed");
         
@@ -114,7 +110,6 @@ router.get('/getAppointments', async (req, res) => {
         else {
             const AppointmentsRecords = await getAppointments({
                 slot_date, 
-       
             });
             res.json({
                 status: "SUCCESS",
@@ -131,4 +126,5 @@ router.get('/getAppointments', async (req, res) => {
         });
     }
 })
+
 module.exports = router;

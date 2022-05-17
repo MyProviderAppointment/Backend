@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const AppointmentsSchema = new Schema({
-    slot_date: String,
+    slot_date: Date,
     slot_time: [{
         slot_start: String,
         available: Boolean,
