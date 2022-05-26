@@ -9,9 +9,9 @@ let transporter = nodemailer.createTransport({
 });
 
 transporter.verify((error, success) => {
-    if (error) {
+    if (error)
         console.log(error);
-    } else {
+    else {
         console.log("Ready for messages");
         console.log(success);
     }

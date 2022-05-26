@@ -1,5 +1,3 @@
-// const { workDay } = require("../../util/workDay");
-// const Appointments = require("./model");
 const Appointments = require("./model");
 const moment = require("moment");
 const User = require("../user/model");
@@ -8,10 +6,10 @@ const User = require("../user/model");
 const createNewWorkDay = async (data) => {
     try {
         const { slot_date, slot_start, slot_end, spacious } = data;
-        const day = new Date(slot_date);
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const day = new Date(slot_date).toLocaleDateString(undefined, options);
         let startTime = moment(slot_start, 'HH:mm');
         let endTime = moment(slot_end, 'HH:mm');
-
         while (startTime < endTime) {
             const newAppointments = new Appointments({
                 slot_date: day,
@@ -55,19 +53,14 @@ const createNewWorkDay = async (data) => {
 const makeAnAppointment = async (data) => {
     try {
         const { slot_date, slot_start, email, userId, name, phone } = data;
-        const day = new Date(slot_date);
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const day = new Date(slot_date).toLocaleDateString(undefined, options);
         const startTime = new moment(moment(slot_start, 'HH:mm')).format('HH:mm');
-
         const userDetails = await User.find({ email });
         const updateAppointment = await Appointments.find({ 
             slot_date: day}, 
             {slot_time: {$elemMatch: {slot_start: startTime}}
         });
-        // console.log(updateAppointment[0].slot_time);
-        // console.log(updateAppointment[0]._id);
-        // console.log(updateAppointment[0].slot_time[0].slot_start);
-        // console.log(updateAppointment[0].slot_time[0]._id);
-        // console.log(userDetails[0]._id, userDetails[0].name);
         if (updateAppointment.length > 0 && updateAppointment[0].slot_time[0].available) { 
             if (userDetails.length > 0) {
                 await Appointments.updateOne({   
@@ -82,6 +75,16 @@ const makeAnAppointment = async (data) => {
                         "slot_time.$.phone": userDetails[0].phone,
                     } 
                 });
+                const updateUser = await User.updateOne({ email }, { 
+                    "$push": { "appointments": [
+                        {
+                            "slot_date": day, 
+                            "slot_start": updateAppointment[0].slot_time[0].slot_start,
+                            _id: updateAppointment[0].slot_time[0]._id,
+                        }
+                    ]}
+                });                  
+                return updateUser; 
             } else {
                 await Appointments.updateOne({   
                     "slot_date": day, 
@@ -106,20 +109,45 @@ const makeAnAppointment = async (data) => {
 const cancelAppointment = async (data) => {
     try {
         const { slot_date, slot_start } = data;
-        const day = new Date(slot_date);
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const day = new Date(slot_date).toLocaleDateString(undefined, options);
         const startTime = new moment(moment(slot_start, 'HH:mm')).format('HH:mm');
-
-        const cancel = await Appointments.find({ 
-            slot_date: day}, 
-            {slot_time: {$elemMatch: {slot_start: startTime}}
+        const cancel = await Appointments.find({
+            slot_date: day }, { 
+            slot_time: { $elemMatch: { slot_start: startTime }}
         });
-
+        console.log(cancel[0].slot_time.slot_start);
+        console.log(cancel[0].slot_time[0].slot_start);
+        console.log(cancel[0].slot_time[0].available);
         if (cancel.length > 0 ) { 
+            if (!cancel[0].slot_time[0].available) {
+                await User.updateOne({ 
+                    "email" : cancel[0].slot_time[0].email }, {
+                    "$pull": { "appointments": { "_id": cancel[0].slot_time[0]._id }}
+                })
+            }
             await Appointments.updateOne({    
                 "slot_date": day}, 
-                {"$pull" : {"slot_time" : {"_id": cancel[0].slot_time[0]._id}}
+                {"$pull" : {"slot_time" : {"slot_start": startTime}}
             });
         }
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Get Available Days
+const getAvailableDays = async (data) => {
+    try {
+        const { slot_month } = data;
+        // Check which days are existing
+        const existingDay = await Appointments.find({ $text: { $search: slot_month }});
+        let arr = [];
+        for (let index = 0; index < existingDay.length; index++) {
+            console.log(existingDay[index].slot_date);
+            arr.push(existingDay[index].slot_date);
+        }
+        return arr;
     } catch (error) {
         throw error;
     }
@@ -129,16 +157,14 @@ const cancelAppointment = async (data) => {
 const getAppointments = async (data) => {
     try {
         const { slot_date } = data;
-        const dayTime = new moment(moment(slot_date, "L")).format("L");
-        const day = new Date(slot_date);
-
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const day = new Date(slot_date).toLocaleDateString(undefined, options);
         const existingDay = await Appointments.find({ slot_date: day });
-        // Check if appointmet day is exists
+        // Check if specific day is exists
         if (existingDay.length > 0) { 
-            let exists = false;
             const array = existingDay[0].slot_time; 
             let arr = [];
-            // Check if appointmet time is available
+            // Check if appointment time is available
             for (let index = 0; index < array.length; index++) {
                 if (array[index].available) 
                     arr.push(array[index].slot_start);               
@@ -150,6 +176,49 @@ const getAppointments = async (data) => {
     }
 };
 
+// Get My Appointments
+const getMyAppointments = async (data) => {
+    try {
+        const { email } = data;
+        // Check which days are existing
+        const userDetails = await User.find({ email: email });
+        console.log(userDetails[0].appointments); 
+        const array = userDetails[0].appointments;           
+        let arr = [];
+        // console.log(existingDay[0]);
+        for (let index = 0; index < array.length; index++) {
+            arr.push(array[index]);
+        }
+        return arr;
+    } catch (error) {
+        throw error;
+    }
+};
 
-module.exports = { createNewWorkDay, makeAnAppointment, cancelAppointment, getAppointments};
+// Get Calendar
+const getCalendar = async (data) => {
+    try {
+        const { slot_time } = data;
+        // Check which days are existing
+        const existingDays = await Appointments.find({ $text: { $search: slot_time }});
+        let arr = [];
+        for (let index = 0; index < existingDays.length; index++) {
+            arr.push({
+                slot_date: existingDays[index].slot_date,
+                slot_time: existingDays[index].slot_time
+            });
+        }
+        return arr;
+    } catch (error) {
+        throw error;
+    }
+};
+
+// const makeService = async (data) => {};
+// const getServices = async (data) => {};
+// const getImages = async (data) => {};
+
+
+module.exports = { createNewWorkDay, makeAnAppointment, cancelAppointment, 
+    getAvailableDays, getAppointments, getMyAppointments, getCalendar};
 

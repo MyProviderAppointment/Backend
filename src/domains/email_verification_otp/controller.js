@@ -9,7 +9,6 @@ const verifyHashedData = require("../../util/verifyHashedData");
 const sendOTPVerificationEmail = async ({ _id, email }) => {
     try {
         const otp = await generateOTP();
-
         const mailOptions = {
             from: process.env.AUTH_EMAIL,
             to: email,
@@ -31,7 +30,6 @@ const sendOTPVerificationEmail = async ({ _id, email }) => {
             userId: _id,
             email,
         };
-
     } catch (error) {
         throw error;
     }     
@@ -41,12 +39,11 @@ const sendOTPVerificationEmail = async ({ _id, email }) => {
 const verifyEmail = async (userId, otp) => {
     try { 
         const OTPVerificationRecords = await OTPVerification.find({ userId });
-        if (OTPVerificationRecords.length <= 0) {
+        if (OTPVerificationRecords.length <= 0) 
             throw new Error("Account record doesn't exist or has been verified already. Please sign up or login.");
-        } else {
+        else {
             const { expiresAt } = OTPVerificationRecords[0];
             const hashedOTP = OTPVerificationRecords[0].otp;
-
             if (expiresAt < Date.now()) {
                 // otp record has expired
                 await OTPVerification.deleteMany({ userId });
@@ -54,9 +51,9 @@ const verifyEmail = async (userId, otp) => {
             } else {
                 const validOTP = await verifyHashedData(otp, hashedOTP);
 
-                if(!validOTP) {
+                if(!validOTP) 
                     throw Error("Invalid code passed. Check your inbox.");
-                } else {
+                else {
                     await User.updateOne({ _id: userId }, {verified: true });
                     await OTPVerification.deleteMany({ userId });
                     return OTPVerificationRecords;
@@ -77,6 +74,5 @@ const resendEmail = async (userId, email) => {
         throw error;
     }
 };
-
 
 module.exports = { sendOTPVerificationEmail, verifyEmail, resendEmail };

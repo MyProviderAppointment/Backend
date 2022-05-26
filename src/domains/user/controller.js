@@ -5,24 +5,21 @@ const verifyHashedData = require("../../util/verifyHashedData");
 // Sign Up
 const createNewUser = async (data) => {
     try {
-        const { name, email, password } = data; // dateOfBirth
-         
+        const { name, email, password, phone } = data;  
         // Checking if user already exist
         const existingUser = await User.find({ email });
-        if (existingUser.length) {
+        if (existingUser.length) 
             throw Error("user already exists");
-        } else {
-            
+        else {     
             // hash password
             const hashedPassword = await hashData(password);
             const newUser = new User({
                 name,
                 email,
                 password: hashedPassword,
-                // dateOfBirth,
+                phone,
                 verified: false,
-            });
-            
+            });   
             // save user
             const createdUser = await newUser.save();
             return createdUser;

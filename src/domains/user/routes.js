@@ -8,35 +8,27 @@ const { sendOTPVerificationEmail } = require("../email_verification_otp/controll
 // Sign Up
 router.post('/signup', async (req, res) => {
     try {
-        let {name, email, password } = req.body; // dateOfBirth
+        let {name, email, password, phone } = req.body; 
         name = name.trim();
         email = email.trim();
         password = password.trim();
-        // phone = phone.trim();
-        // dateOfBirth = dateOfBirth.trim();
-
-        if (name == "" || email == "" || password == "" ) // || dateOfBirth == "") 
+        if (name == "" || email == "" || password == "" || phone == "")
             throw Error("Empty fields");
-
         else if (!/^[a-zA-Z א-ת]*$/.test(name)) 
             throw Error("Invalid name");
-
         else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) 
             throw Error("Invalid email");
-
-        // else if (!new Date(dateOfBirth).getTime()) 
-        //     throw Error("Invalid date of birth");
-
         else if (password.length < 8) 
             throw Error("password is too short!");
-
+        else if (phone.length == 9)
+            throw Error("Invalid phone number");
         else {
            //valid credentials
             const newUser = await createNewUser({
                 name,
                 email,
                 password,
-                // dateOfBirth,
+                phone
             });
             const emailData = await sendOTPVerificationEmail(newUser);
             res.json({
@@ -45,14 +37,12 @@ router.post('/signup', async (req, res) => {
                 data: emailData, 
             });
         }
-
     } catch (error) {
         res.json({
             status: "FAILED",
             message: error.message,
         });     
     }
-
 })
 
 // Sign In
@@ -61,17 +51,14 @@ router.post('/signin', async (req, res) => {
         let {email, password} = req.body;
         email = email.trim();
         password = password.trim();
-
         if (email == "" || password == "") 
-            throw Error("Empty fields");
-        
+            throw Error("Empty fields"); 
         const authenticatedUser = await authenticateUser(email, password);
         res.json({
             status: "SUCCESS",
             message: "Signin successfully",
             data: authenticatedUser, 
         });
-
     } catch (error) {
         res.json({
             status: "FAILED",

@@ -24,7 +24,6 @@ const sendOTPPasswordResetEmail = async ( email ) => {
                     html: `<p>We heard that you lost your password</p><p>Don't worry, Enter <b>${otp}</b> in the app to reset your pasword</p>
                     <p>This code <b>expires in 1 hour</b>.</p>`,
                 };
-                
                 // hash the otp
                 const hashedOTP = await hashData(otp);
                 const newOTPPasswordReset = await new OTPPasswordReset({
@@ -33,7 +32,6 @@ const sendOTPPasswordResetEmail = async ( email ) => {
                     createdAt: Date.now(), 
                     expiresAt: Date.now() + 3600000,
                 });
-        
                 // save OTP record
                 await newOTPPasswordReset.save();
                 await sendEmail(mailOptions);
@@ -52,12 +50,11 @@ const sendOTPPasswordResetEmail = async ( email ) => {
 const passwordReset = async (userId, otp, newPassword) => {
     try { 
         const OTPPasswordResetRecords = await OTPPasswordReset.find({ userId });
-        if (OTPPasswordResetRecords.length <= 0) {
+        if (OTPPasswordResetRecords.length <= 0) 
             throw new Error("Account record doesn't exist or has been verified already. Please sign up or login.");
-        } else {
+        else {
             const { expiresAt } = OTPPasswordResetRecords[0];
             const hashedOTP = OTPPasswordResetRecords[0].otp;
-
             if (expiresAt < Date.now()) {
                 // otp record has expired
                 await OTPPasswordReset.deleteMany({ userId });
@@ -65,10 +62,9 @@ const passwordReset = async (userId, otp, newPassword) => {
             } else {
                 const validOTP = await verifyHashedData(otp, hashedOTP);
                 const hashedPassword = await hashData(newPassword);
-
-                if(!validOTP) {
+                if (!validOTP) 
                     throw Error("Invalid code passed. Check your inbox.");
-                } else {
+                else {
                     await User.updateOne({ _id: userId }, { password: hashedPassword });
                     await OTPPasswordReset.deleteMany({ userId });
                     return OTPPasswordResetRecords;

@@ -3,8 +3,6 @@ const router = express.Router();
 
 // Custom functions
 const { verifyEmail, resendEmail } = require("./controller");
-// sendOTPVerificationEmail
-
 
 // Verify OTP Email
 router.post('/verifyOTP', async (req, res) => {
@@ -31,9 +29,9 @@ router.post('/verifyOTP', async (req, res) => {
 router.post('/resendOTPVerificationCode', async (req,res) => {
     try {
         let{ userId, email } =req.body;
-        if(!userId || !email) {
+        if(!userId || !email) 
             throw Error("Empty user details are not allowed");
-        } else {
+        else {
             await resendEmail(userId, email);
             res.json({
                 status: "PENDING",
@@ -41,10 +39,10 @@ router.post('/resendOTPVerificationCode', async (req,res) => {
             });
         }
     } catch (error) {
-         res.json({
-             status: "FAILED",
-             message: error.message,
-         })
+        res.json({
+            status: "FAILED",
+            message: error.message,
+        })
     }
 })
 
