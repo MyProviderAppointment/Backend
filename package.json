@@ -5,7 +5,7 @@
   "main": " server.js",
   "scripts": {
     "dev": "nodemon -r dotenv/config src/index.js dotenv_config_path=env/local.env"
-  }, 
+  },
   "author": "BAM",
   "license": "(MIT)",
   "dependencies": {
@@ -15,7 +15,7 @@
     "moment": "^2.29.3",
     "mongoose": "^6.2.11",
     "nodemailer": "^6.7.3",
-    "nodemon": "^2.0.15",
+    "nodemon": "^2.0.16",
     "serve": "^13.0.2",
     "timerange": "^0.2.0",
     "timeranges": "^1.0.3",

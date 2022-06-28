@@ -30,6 +30,9 @@ const UserSchema = new Schema({
             type: String,
             required: true,
         },
+        slot_end: {
+            type: String,
+        },
         required: false,
     }]
 });

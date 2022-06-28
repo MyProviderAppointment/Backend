@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // Custom functions
-const { createNewUser, authenticateUser } = require("./controller");
+const { createNewUser, authenticateUser, getUsers } = require("./controller");
 const { sendOTPVerificationEmail } = require("../email_verification_otp/controller");
 
 // Sign Up
@@ -58,6 +58,23 @@ router.post('/signin', async (req, res) => {
             status: "SUCCESS",
             message: "Signin successfully",
             data: authenticatedUser, 
+        });
+    } catch (error) {
+        res.json({
+            status: "FAILED",
+            message: error.message,
+        });   
+    }
+})
+
+// Get Users
+router.post('/getUsers', async (req, res) => {
+    try {
+        const users = await getUsers();
+        res.json({
+            status: "SUCCESS",
+            message: "Get Users successfully",
+            data: users, 
         });
     } catch (error) {
         res.json({

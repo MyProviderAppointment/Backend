@@ -51,4 +51,31 @@ const authenticateUser = async (email, password) => {
     }
 };
 
-module.exports = { createNewUser, authenticateUser };
+// Get Users
+const getUsers = async () => {
+    try {
+        const users = await User.find();
+        // Check if specific day is exists
+        // if (users.length > 0) { 
+            console.log(users[0]);
+
+            const array = users; 
+            let arr = [];
+            // // Check if appointment time is available
+            for (let index = 0; index < array.length; index++) {
+                if (array[index].verified) {
+                    arr.push({
+                        index: index,
+                        email: array[index].email,
+                        name: array[index].name,
+                        phone: array[index].phone,
+                    });  
+                }             
+            }
+            return arr;
+        // }
+    } catch (error) {
+        throw error;
+    }
+};
+module.exports = { createNewUser, authenticateUser ,getUsers };

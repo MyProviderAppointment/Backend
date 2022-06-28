@@ -1,23 +1,24 @@
 const express = require('express');
 const router = express.Router();
 
-const { createNewWorkDay, makeAnAppointment, cancelAppointment, getAvailableDays, 
+const { createMultiWorkDay, createNewWorkDay, createAnAppointment, makeAnAppointment, cancelAppointment, getAvailableDays, 
     getAppointments, getMyAppointments, getCalendar } = require("./controller");
 
 // Create Work Day and availability
 router.post('/providerAppointments', async (req, res) => {
     try {
-        let {slot_date, slot_start, slot_end, spacious} = req.body;
+        let {slot_date, slot_start, slot_end, spacious, slot_repeat } = req.body;
         if (!slot_date || !slot_start || !slot_end || !spacious)
             throw Error("Empty fields are not allowed");
         else if (new Date(slot_date) < Date.now()) 
             throw Error("Invalid date"); 
         else {
-            const AppointmentsRecords = await createNewWorkDay({
+            const AppointmentsRecords = await createMultiWorkDay({
                 slot_date, 
                 slot_start, 
                 slot_end, 
                 spacious,
+                slot_repeat,
             });
             res.json({
                 status: "SUCCESS",
@@ -31,7 +32,38 @@ router.post('/providerAppointments', async (req, res) => {
         });
     }
 })
-
+// Create an Appointment for customer
+router.post('/createAnAppointment', async (req, res) => {
+    try {
+        let { slot_date, slot_start, slot_end, email, userId, name, phone } = req.body;
+        if (!slot_date || !slot_start || !slot_end ) {
+            if (!email && (!name || !phone))
+                throw Error("Empty fields are not allowed");
+        }
+        else if (new Date(slot_date) < Date.now()) 
+            throw Error("Invalid date"); 
+        else {
+            const AppointmentsRecords = await createAnAppointment({
+                slot_date, 
+                slot_start,
+                slot_end, 
+                email, 
+                name, 
+                phone,
+            });
+            res.json({
+                status: "SUCCESS",
+                message: `Successfully made specific appointment.`,
+                data: { AppointmentsRecords },
+            });     
+        }
+    } catch (error) {
+        res.json({
+            status: "FAILED",
+            message: error.message,
+        });
+    }
+})
 // Make an Appointment for customer
 router.post('/makeAnAppointment', async (req, res) => {
     try {
